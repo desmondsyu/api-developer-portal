@@ -38,26 +38,30 @@ public class UserRepository {
 				}
 			}
 			return isExist;
+		} catch (SQLException e) {
+			throw e;
 		}
 	}
 
-	public static boolean getUser(String username, String password) throws SQLException {
+	public static User getUser(String username, String password) throws SQLException {
 		try (Connection connection = DatabaseUtil.getConnection();
 				PreparedStatement preparedStatement = connection
-						.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ? AND password = ?")) {
-			boolean isExist = false;
-
+						.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?")) {
 			preparedStatement.setString(1, username);
 			preparedStatement.setString(2, password);
 
+			User user = new User();
+
 			ResultSet resultSet = preparedStatement.executeQuery();
 			if (resultSet.next()) {
-				int result = resultSet.getInt(1);
-				if (result != 0) {
-					isExist = true;
-				}
+
+				user.setUserId(Integer.parseInt(resultSet.getString("id")));
+				user.setUsername(resultSet.getString("username"));
+				user.setPassword(resultSet.getString("password"));
 			}
-			return isExist;
+			return user;
+		} catch (SQLException e) {
+			throw e;
 		}
 	}
 }

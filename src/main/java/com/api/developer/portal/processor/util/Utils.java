@@ -9,14 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class Utils {
 	
-	public static User populateUserParametersFromRequest(HttpServletRequest request) throws ParseException {
-		User user = new User();
-		user.setUsername(request.getParameter("username"));
-		user.setPassword(request.getParameter("password"));
-		user.setEmail(request.getParameter("email"));
-        return user;
-	}
-
 	public static java.sql.Date dateToSqlDate(java.util.Date date){
 		return new java.sql.Date(date.toInstant().toEpochMilli());
 	}

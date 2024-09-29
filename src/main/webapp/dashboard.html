@@ -2,25 +2,159 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Page</title>
+<title>Dashboard</title>
 <style>
+body {
+	font-family: 'Arial', sans-serif;
+	background-color: #f4f4f4;
+	margin: 0;
+	padding: 20px;
+}
 
+button {
+	background-color: #4caf50;
+	color: #fff;
+	padding: 10px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #45a049;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 20px;
+}
+
+th, td {
+	border: 1px solid #ddd;
+	padding: 10px;
+	text-align: left;
+}
+
+th {
+	background-color: #4caf50;
+	color: white;
+}
+
+label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: bold;
+}
+
+select {
+	width: 100%;
+	padding: 8px;
+	margin-bottom: 16px;
+	box-sizing: border-box;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
 </style>
 </head>
 <body>
 	<table>
-	<thead>
-		<tr>
-			<th>User</th>
-			<th>Key</th>
-			<th>Status</th>
-			<th>Creation Date</th>
-			<th>Select</th>
-		</tr>
+		<thead>
+			<tr>
+				<th>Key</th>
+				<th>Status</th>
+				<th>Creation Date</th>
+				<th>Select</th>
+			</tr>
 		</thead>
-		<tbody>
-		
+		<tbody id="keyList">
 		</tbody>
 	</table>
+	
+	
+	<div>
+		<button id="generateKeyButton">New Key</button>
+		<button id="deactivateButton">Deactivate</button>
+		<button id="manageKey">Manage Key</button>
+	</div>
+
+	<script>
+		// load list
+		async function fetchKeyList() {
+			try {
+				const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
+					method : "GET",
+				});
+				if (!response.ok) {
+					throw new Error("Fetch failed");
+				}
+
+				const tableDetail = await response.text();
+				const keyListElement = document.getElementById("keyList");
+				keyListElement.innerHTML = tableDetail;
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		document.addEventListener("DOMContentLoaded", fetchKeyList);
+
+		// handle generate click
+		async function handleGenerateKey() {
+			try {
+				const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
+					method : "POST",
+					headers : {
+						"Content-Type" : "application/json",
+					},
+				});
+
+				if (!response.ok) {
+					throw new Error("Create failed");
+				}
+
+				fetchKeyList();
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		document.getElementById("generateKeyButton").addEventListener("click", handleGenerateKey);
+		
+		// handle deactivate click
+		async function handleDeactivate(){
+			try {
+		        const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
+		            method: "PUT",
+		            headers: {
+						"Content-Type" : "application/x-www-form-urlencoded",
+		            },
+		            body: new URLSearchParams({
+		                keyId: selectedKeyId,
+		                apiKey: selectedKey,
+		                status: "Invalid",
+		                createdAt: selectedCreatedAt,
+		            }),
+		        });
+
+		        if (!response.ok) {
+		            throw new Error("Deactivate failed");
+		        }
+
+		        fetchKeyList();
+		    } catch (error) {
+		        console.error(error);
+		    }
+		}
+		
+		document.getElementById("deactivateButton").addEventListener("click", handleDeactivate);
+		
+		// handel radio selection
+		let selectedKey = null;
+
+		function handleRadioChange(event) {
+		    selectedKey = event.target.getAttribute("data-key-id");
+		}
+	</script>
 </body>
 </html>

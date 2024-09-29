@@ -4,19 +4,21 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.api.developer.portal.db.util.DatabaseUtil;
 import com.api.developer.portal.processor.model.Key;
+import com.api.developer.portal.processor.util.Utils;
 
 public class ApiKeyRepository {
-	public static List<Key> getAllKeys(String username) throws SQLException {
+	public static List<Key> getAllKeys(int userId) throws SQLException, ParseException {
 		List<Key> keysList = new ArrayList<Key>();
 		try (Connection connection = DatabaseUtil.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(
-						"SELECT * FROM api_keys WHERE user_id = (SELECT id FROM users WHERE username = ?)")) {
-			preparedStatement.setString(1, username);
+				PreparedStatement preparedStatement = connection
+						.prepareStatement("SELECT * FROM api_keys WHERE user_id = ?")) {
+			preparedStatement.setInt(1, userId);
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
 				Key key = new Key();
@@ -46,15 +48,39 @@ public class ApiKeyRepository {
 		}
 	}
 
-	public static void updateKey(int id) throws SQLException {
+	public static void updateKey(Key key) throws SQLException {
 		try (Connection connection = DatabaseUtil.getConnection();
 				PreparedStatement preparedStatement = connection
-						.prepareStatement("UPDATE api_keys SET status = 'Disabled' WHERE id = ?")) {
-			preparedStatement.setInt(1, id);
+						.prepareStatement("UPDATE api_keys SET api_key = ?, status = ?, created_at = ? WHERE id = ?")) {
+			preparedStatement.setString(1, key.getApiKey());
+			preparedStatement.setString(2, key.getStatus());
+			preparedStatement.setDate(3, Utils.dateToSqlDate(key.getCreatedAt()));
+			preparedStatement.setInt(4, key.getKeyId());
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
 			throw e;
 		}
+	}
+
+	public static Key getKey(int keyId) throws SQLException, ParseException {
+		Key key = new Key();
+		try (Connection connection = DatabaseUtil.getConnection();
+				PreparedStatement preparedStatement = connection
+						.prepareStatement("SELECT * FROM api_key WHERE id = ?")) {
+
+			preparedStatement.setInt(1, keyId);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			if (resultSet.next()) {
+				key.setKeyId(Integer.parseInt(resultSet.getString("id")));
+				key.setUserId(Integer.parseInt(resultSet.getString("user_id")));
+				key.setApiKey(resultSet.getString("api_key"));
+				key.setStatus(resultSet.getString("status"));
+				key.setCreatedAt(resultSet.getDate("created_at"));
+			}
+		} catch (SQLException e) {
+			throw e;
+		}
+		return key;
 	}
 
 }

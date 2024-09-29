@@ -51,6 +51,7 @@ public class RegisterServlet extends HttpServlet {
 			user.setEmail(request.getParameter("email"));
 
 			if (UserRepository.getUser(user.getUsername())) {
+				response.sendRedirect("registration.html");
 				throw new Exception("User already exists");
 			}
 

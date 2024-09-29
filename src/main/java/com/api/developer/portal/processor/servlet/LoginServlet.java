@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
+import com.api.developer.portal.processor.model.User;
 import com.api.developer.portal.processor.repository.UserRepository;
 
 public class LoginServlet extends HttpServlet {
@@ -49,11 +50,16 @@ public class LoginServlet extends HttpServlet {
 		try {
 			String username = request.getParameter("username");
 			String password = request.getParameter("password");
-
-			if (UserRepository.getUser(username, password)) {
+			
+			User user = UserRepository.getUser(username, password);
+			
+			if (user.getUsername() != null) {
 				HttpSession session = request.getSession();
-				session.setAttribute("username", username);
+				session.setAttribute("userId", user.getUserId());
 				response.sendRedirect("dashboard.html");
+			} else {
+				getServletContext().log("Incorrect credentials");
+				response.sendRedirect("login.html");
 			}
 		} catch (Exception e) {
 			getServletContext().log(e.getMessage());
