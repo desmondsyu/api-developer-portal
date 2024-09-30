@@ -3,25 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <title>Key Management Page</title>
+<style>
+body {
+	font-family: 'Arial', sans-serif;
+	background-color: #f4f4f4;
+	margin: 0;
+	padding: 20px;
+}
+
+button {
+	background-color: #3babd4;
+	color: #fff;
+	padding: 10px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #136f91;
+}
+
+form {
+	background-color: #fff;
+	padding: 20px;
+	border-radius: 8px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	max-width: 500px;
+}
+
+label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: bold;
+}
+
+input, select {
+	width: 100%;
+	padding: 8px;
+	margin-bottom: 16px;
+	box-sizing: border-box;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+</style>
 </head>
 <body>
-	<form>
-		<label>API key</label>
-		<input type="text" name="apiKey" disabled /><br>
-		
-		<label>Status</label>
-		<input type="text" name="status" disabled /><br>
-		
-		<label>Creation Date</label>
-		<input type="date" name="creationDate" disabled /><br>
+	<form id="keyForm">
+		 <label>API key</label> <input type="text" name="apiKey" disabled  /><br>
+
+		 <label>Status</label> <input type="text" name="status" disabled /><br>
+
+		 <label>Creation Date</label> <input type="date" name="creationDate"
+			disabled /><br>
 	</form>
+
 	<div>
-		<button id="regenerateButton">Regenerate</button>
-		<button id="deactivateButton" disabled>Deactivate</button>
+		<button type="button" id="regenerateButton">Regenerate</button>
+		<button type="button" id="deactivateButton">Deactivate</button>
+		<a href="dashboard.html">
+			<button type="button">Dashboard</button>
+		</a>
 	</div>
-	
+
+
 	<script>
-		
+		function currentKey() {
+			const params = new URLSearchParams(window.location.search);
+			return params.get('keyId');
+		}
+	
+		async function fetchKey(){
+			try {
+				const response = await fetch(`/APIDeveloperPortal/ApiKeyServlet?operation=getbyid&keyId=${currentKey()}`, {
+					method : "GET",
+					headers : {
+						"Content-Type" : "application/x-www-form-urlencoded",
+					},
+				});
+				
+				const data = await response.text();
+				
+				document.getElementById("keyForm").innerHTML = data;
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		document.addEventListener("DOMContentLoaded", fetchKey);
+	
+	
+		async function handleDeactivate() {
+			const selectedKey = currentKey();
+			try {
+				const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
+					method : "POST",
+					headers : {
+						"Content-Type" : "application/x-www-form-urlencoded",
+					},
+					body : "operation=deactivate&keyId=" + selectedKey,
+				});
+
+				if (!response.ok) {
+					throw new Error("Deactivate failed");
+				}
+	
+				fetchKey();
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		document.getElementById("deactivateButton").addEventListener("click",
+				handleDeactivate);
+
+		async function handleRegenerate() {
+			const selectedKey = currentKey();
+			try {
+				const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
+					method : "POST",
+					headers : {
+						"Content-Type" : "application/x-www-form-urlencoded",
+					},
+					body : "operation=regenerate&keyId=" + selectedKey,
+				});
+
+				if (!response.ok) {
+					throw new Error("Regenerate failed");
+				}
+				
+				fetchKey();
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		document.getElementById("regenerateButton").addEventListener("click",
+				handleRegenerate);
 	</script>
 </body>
 </html>

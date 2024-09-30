@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.api.developer.portal.db.util.DatabaseUtil;
@@ -48,14 +49,24 @@ public class ApiKeyRepository {
 		}
 	}
 
-	public static void updateKey(Key key) throws SQLException {
+	public static void deactivateKey(int keyId) throws SQLException {
 		try (Connection connection = DatabaseUtil.getConnection();
 				PreparedStatement preparedStatement = connection
-						.prepareStatement("UPDATE api_keys SET api_key = ?, status = ?, created_at = ? WHERE id = ?")) {
-			preparedStatement.setString(1, key.getApiKey());
-			preparedStatement.setString(2, key.getStatus());
-			preparedStatement.setDate(3, Utils.dateToSqlDate(key.getCreatedAt()));
-			preparedStatement.setInt(4, key.getKeyId());
+						.prepareStatement("UPDATE api_keys SET status = 'Invalid' WHERE id = ?")) {
+			preparedStatement.setInt(1, keyId);
+			preparedStatement.executeUpdate();
+		} catch (SQLException e) {
+			throw e;
+		}
+	}
+	
+	public static void regenerateKey(int keyId, String newKey) throws SQLException {
+		try (Connection connection = DatabaseUtil.getConnection();
+				PreparedStatement preparedStatement = connection
+						.prepareStatement("UPDATE api_keys SET api_key = ?, status = 'Active', created_at = ?  WHERE id = ?")) {
+			preparedStatement.setString(1, newKey);
+			preparedStatement.setTimestamp(2, Utils.dateToSqlDate(new Date()));
+			preparedStatement.setInt(3, keyId);
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
 			throw e;
@@ -66,7 +77,7 @@ public class ApiKeyRepository {
 		Key key = new Key();
 		try (Connection connection = DatabaseUtil.getConnection();
 				PreparedStatement preparedStatement = connection
-						.prepareStatement("SELECT * FROM api_key WHERE id = ?")) {
+						.prepareStatement("SELECT * FROM api_keys WHERE id = ?")) {
 
 			preparedStatement.setInt(1, keyId);
 			ResultSet resultSet = preparedStatement.executeQuery();

@@ -9,8 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class Utils {
 	
-	public static java.sql.Date dateToSqlDate(java.util.Date date){
-		return new java.sql.Date(date.toInstant().toEpochMilli());
+	public static java.sql.Timestamp dateToSqlDate(java.util.Date date){
+		return new java.sql.Timestamp(date.getTime());
 	}
 	
 	public static java.util.Date stringToDate(String date) throws ParseException{

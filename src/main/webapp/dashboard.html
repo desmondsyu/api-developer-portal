@@ -12,7 +12,7 @@ body {
 }
 
 button {
-	background-color: #4caf50;
+	background-color: #3babd4;
 	color: #fff;
 	padding: 10px;
 	border: none;
@@ -21,7 +21,7 @@ button {
 }
 
 button:hover {
-	background-color: #45a049;
+	background-color: #136f91;
 }
 
 table {
@@ -37,7 +37,7 @@ th, td {
 }
 
 th {
-	background-color: #4caf50;
+	background-color: #3babd4;
 	color: white;
 }
 
@@ -73,9 +73,9 @@ select {
 	
 	
 	<div>
-		<button id="generateKeyButton">New Key</button>
-		<button id="deactivateButton">Deactivate</button>
-		<button id="manageKey">Manage Key</button>
+		<button type="button" id="generateKeyButton">New Key</button>
+		<button type="button" id="deactivateButton">Deactivate</button>
+		<button type="button" id="manageKeyButton">Manage Key</button>
 	</div>
 
 	<script>
@@ -84,6 +84,9 @@ select {
 			try {
 				const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
 					method : "GET",
+					headers:{
+						"Content-Type": "application/x-www-form-urlencoded",
+					},
 				});
 				if (!response.ok) {
 					throw new Error("Fetch failed");
@@ -92,6 +95,11 @@ select {
 				const tableDetail = await response.text();
 				const keyListElement = document.getElementById("keyList");
 				keyListElement.innerHTML = tableDetail;
+				
+				const radioButtons = document.querySelectorAll(".keyRadio");
+		        radioButtons.forEach((radio) => {
+		            radio.addEventListener("change", handleRadioChange);
+		        });
 			} catch (error) {
 				console.error(error);
 			}
@@ -99,14 +107,22 @@ select {
 
 		document.addEventListener("DOMContentLoaded", fetchKeyList);
 
+		// handel radio selection
+		let selectedKey = null;
+
+		function handleRadioChange(event) {
+		    selectedKey = event.target.getAttribute("data-key-id");
+		}
+		
 		// handle generate click
 		async function handleGenerateKey() {
 			try {
 				const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
 					method : "POST",
-					headers : {
-						"Content-Type" : "application/json",
+					headers:{
+						"Content-Type": "application/x-www-form-urlencoded",
 					},
+					body:"operation=add",
 				});
 
 				if (!response.ok) {
@@ -123,18 +139,19 @@ select {
 		
 		// handle deactivate click
 		async function handleDeactivate(){
+			if (!selectedKey) {
+			    alert("Please select a key.");
+			    return;
+			}
+			
 			try {
 		        const response = await fetch("/APIDeveloperPortal/ApiKeyServlet", {
-		            method: "PUT",
+
+		            method: "POST",
 		            headers: {
 						"Content-Type" : "application/x-www-form-urlencoded",
 		            },
-		            body: new URLSearchParams({
-		                keyId: selectedKeyId,
-		                apiKey: selectedKey,
-		                status: "Invalid",
-		                createdAt: selectedCreatedAt,
-		            }),
+		            body: "operation=deactivate&keyId=" + selectedKey,
 		        });
 
 		        if (!response.ok) {
@@ -149,12 +166,21 @@ select {
 		
 		document.getElementById("deactivateButton").addEventListener("click", handleDeactivate);
 		
-		// handel radio selection
-		let selectedKey = null;
+		// handle manage key click
+		async function handleManageClick(){
+			if (!selectedKey) {
+			    alert("Please select a key.");
+			    return;
+			}
+			
+			const keyManagementPageUrl = `keyManagement.html?keyId=${encodeURIComponent(selectedKey)}`;
 
-		function handleRadioChange(event) {
-		    selectedKey = event.target.getAttribute("data-key-id");
+		    window.location.href = keyManagementPageUrl;
 		}
+		
+		document.getElementById("manageKeyButton").addEventListener("click", handleManageClick);
+
+
 	</script>
 </body>
 </html>
